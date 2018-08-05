@@ -1,4 +1,5 @@
-## 继承 ##
+## 第4章 继承 ##
+[上一章][chapter-03] | [目录][readme] | [下一章][chapter-05]
 
 ### 继承 ###
 面向对象的三个最重要的概念是继承、封装和多态性。
@@ -122,3 +123,10 @@
       }
     }
   ```
+
+[上一章][chapter-03] | [目录][readme] | [下一章][chapter-05]
+
+  [readme]: readme.md
+  [chapter-03]: chapter-03.md "第3章 对象和类型"
+  [chapter-04]: chapter-04.md "第4章 继承"
+  [chapter-05]: chapter-05.md "第5章 托管和非托管的资源"

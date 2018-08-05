@@ -1,4 +1,5 @@
-## 泛型 ##
+## 第6章 泛型 ##
+[上一章][chapter-05] | [目录][readme] | [下一章][chapter-07]
 
 ### 泛型概述 ###
 泛型是C#语言的一种结构，是CLR定义的，与IL代码紧密地集成。  
@@ -264,3 +265,10 @@ public static decimal Accumulate<TAccount>(IEnumerable<TAcount> source)
 泛型是CLR中的一个非常重要的特性。  
 通过泛型类可以创建独立于类型的类，泛型方法是独立于类型的方法。  
 接口、结构和委托也可以用泛型的方式创建。  
+
+[上一章][chapter-05] | [目录][readme] | [下一章][chapter-07]
+
+  [readme]: readme.md
+  [chapter-05]: chapter-05.md "第5章 托管和非托管的资源"
+  [chapter-06]: chapter-06.md "第6章 泛型"
+  [chapter-07]: chapter-07.md "第7章 数组和元组"

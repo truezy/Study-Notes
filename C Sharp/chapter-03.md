@@ -1,4 +1,5 @@
-## 对象和类型 ##
+## 第3章 对象和类型 ##
+[上一章][chapter-02] | [目录][readme] | [下一章][chapter-04]
 
 ### 类属性 ###
 ```cs
@@ -87,3 +88,10 @@ int wordCount = stringExt::GetWordCount(fox);
 * `Finalize()`方法  
 * `MemberwiseClone()`方法  
 * `GetType()`方法: 返回`System.Type`派生实例  
+
+[上一章][chapter-02] | [目录][readme] | [下一章][chapter-04]
+
+  [readme]: readme.md
+  [chapter-02]: chapter-02.md "第2章 核心C#"
+  [chapter-03]: chapter-03.md "第3章 对象和类型"
+  [chapter-04]: chapter-04.md "第4章 继承"
