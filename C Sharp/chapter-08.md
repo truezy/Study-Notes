@@ -82,7 +82,7 @@
 	```
 * 显式转换
 会丢失数据的转换，或可空转非空，只能进行显式转换
-```cs
+  ```cs
   long val = 3000000000; //0xB2D05E00 3000000000
   int i1 = (int)val; //0xB2D05E00 -1294967296
   int i2 = checked((int)val); //checked发现溢出会抛出溢出异常
@@ -90,13 +90,13 @@
   string s = i1.ToString(); //"-1294967296"
   int i3 = int.Parse(s);  //-1294967296
   int.Parse('hello'); //抛出异常
-```
+  ```
 * 装箱和拆箱
-```cs
+  ```cs
   long l = 333333423; //0x 13DE 43AF
   object o = (object)l;
-  (int)o; //8字节数据箱拆放到4字节上,空间不足，会抛出InvalidCastException异常
-```
+  (int)o; //8字节数据箱拆放到4字节上,空间不足,会抛出InvalidCastException异常
+  ```
 
 ### 比较对象的相等性 ###
 对象相等判断，取决于比较的是引用类型(类实例)还是值类型(基本数据类型、结构或枚举实例)
@@ -118,6 +118,70 @@
   最好将`==`看作严格的值比较和严格的引用比较之间的中间选项。  
   如果类可以看作值则最好重写比较运算符以执行值的比较(例如`System.String`的`==`是重写的)。  
 * 比较值类型的相等性
+  与引用类型比较规则相同，主要区别是值类型需要先装箱转为引用。  
+  1. `ReferenceEquals(x, y)`方法对于值类型永远返回false, 即使以`(x, x)`参数调用也如此(各自装箱会得到不同引用)，所以无意义。
+  2. `System.ValueType`类中已经重载了实例方法`x.Equals(y)`，如值类型包含引用类型数据就需要重写。
+  3. `==`: 一般不能对自己的结构重载此运算符，`x==y`会导致编译错误，除非提供了此运算符的重载版本。
+
+### 运算符重载 ###
+* 运算符的工作方式
+  编译器会根据参与运算的数据查找最匹配的运算符重载方法。  
+  ```cs
+    struct Vector {
+      public Vector(double x, double y, double z) { X = x; Y = y; Z = z;}
+      public Vector(Vector v) { X = v.X; Y = v.Y; Z = v.Z;}
+      public double X { get; }
+      public double Y { get; }
+      public double Z { get; }
+      public override string ToString() => $"( {X}, {Y}, {Z})";
+      public static Vector operator +(Vector left, Vector right) =>
+        new Vector(left.X + right.X, left.Y + right.Y, left.Z + right.Z);
+      public static Vector operator *(double left, Vector right) =>
+        new Vector(left * right.X, left * right.Y, left * right.Z);
+      public static Vector operator *(Vector left, double right) =>
+        right * left;
+      public static double operator *(Vector left, Vector right) =>
+        left.X * right.X + left.Y * right.Y + left.Z * right.Z);
+    }
+  ```
+  * C#要求所有的运算符重载都声明为`public`和`static`
+  * `+=`实际对应的操作为相加和赋值两步，C#不允许重载`=`运算符
+  * 如果重载了`+`运算符，编译器会自动使用`+`来执行`+=`，其它`-=`、`*=`等等类似
+* 比较运算符的重载
+  C#有6个比较运算符，分为3对: `==`和`!=`，`>`和`<`，`>=`和`<=`。  
+  他们必须成对重载，且要同时重写`Equals`、`GetHashCode`，否则编译器会报错。  
+  他们必须返回布尔值。  
+  ```cs
+    public static bool operator ==(Vector left, Vector right) {
+      if (object.ReferenceEquals(left, right)) return true;
+      return left.X == right.X && left.Y == right.Y && left.Z == right.Z;
+    }
+    public static bool operator !=(Vector left, Vector right) => !(left == right);
+    public override bool Equals(object ogj) {
+      if(obj == null) return false;
+      return this == (Vector)obj;
+    }
+    public override int GetHashCode() =>
+      X.GetHashCode() + (Y.GetHashCode() << 4) + (Z.GetHashCode() << 8);
+  ```
+  对于值类型，也应该实现接口`IEquatable<T>`————`Equals`方法的一个强类型化版本，由基类`Object`定义
+  ```cs
+    public bool Equals(Vector other) => this == other;
+  ```
+* 可以重载的运算符  
+  1. 算术二元运算符: `+` `*` `/` `-` `%`
+  2. 算术一元运算符: `+` `-` `++` `--`
+  3. 按位二元运算符: `&` `|` `^` `<<` `>>`
+  4. 按位一元运算符: `!` `~` `true` `false`  
+    `true`和`false`运算符必须成对重载
+  5. 比较运算符: `==` `!=` `>=` `<` `<=` `>`  
+    必须成对重载
+  6. 赋值运算符: `+=` `-=` `*=` `/=` `>>=` `<<=` `%=` `&=` `|=` `^=`  
+    单个运算符重载后会被整个隐式重写
+  7. 索引运算符: `[]`  
+    不能直接重载，第2章介绍的索引器成员类型允许在类和结构上支持索引运算符
+  8. 类型强制转换运算符: `()`  
+    不能直接重载。允许自定义转换行为
 
 [上一章][chapter-07] | [目录][readme] | [下一章][chapter-09]
 
