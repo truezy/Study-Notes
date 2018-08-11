@@ -183,6 +183,104 @@
   8. 类型强制转换运算符: `()`  
     不能直接重载。允许自定义转换行为
 
+### 实现自定义的索引运算符 ###
+  ```cs
+  public class PersonCollection {
+    private Person[] _people;
+    public PersonCollection(params Person[] people) {
+      _people = people.ToArray();
+    }
+    public Person this[int index] {
+      get { return _people[index]; }
+      set { _people[index] = value; }
+    }
+    public IEnumerable<Persion> this[DateTime birthDay] {
+      get { return _people.Where(p => p.BirthDay == birthDay); }
+    }
+    //C#6:
+    public IEnumerable<Persion> this[DateTime birthDay] =>
+      _people.Where(p => p.BirthDay == birthDay);
+  }
+  static void Main() {
+    var coll = new PersonCollection(new Person("Ayrton", "Senna", new DateTime(1960, 3, 2)), ...);
+    WriteLine(coll[2]);
+    foreach(var r in coll[new DateTime(1960, 3, 2)]) {
+      WriteLine(r);
+    }
+  }
+  ```
+
+### 实现用户定义的类型强制转换 ###
+  ```cs
+  int i = 3;
+  long l = i; //implicit 安全无损的转换——隐式强制转换
+  short s = (short)i; //explict 可能失败或损失的转换——显式强制转换
+  ```
+  定义类型强制转换的语法同于重载运算符，必须同时声明为`public`和`static`(与C++实例成员用法不同)
+  ```cs
+  public static implicit operator float (Currency value) { ... }
+  ```
+* 实现用户定义的类型强制转换
+  ```cs
+  public struct Currency {
+    public uint Dollars { get; }
+    public ushort Cents { get; }
+    public Currency(uint dollars, ushort cents) {
+      Dollars = dollars; Cents = cents;
+    }
+    public override string ToString() => $"${Dollars}.{Cents,-2:00}";
+  }
+  ```
+  ```cs
+  public static implicit operator float (Currency value) =>
+    value.Dollars + (value.Cents/100.0f);
+  float f = new Currency(10, 50); // 10.50
+  ```
+  ```cs
+  public static explict operator Currency (float value) {
+    uint dollars = (uint)value;
+    ushort cents = (ushort)((value-dollars)*100);
+    return new Currency(dollars, cents);
+  }
+  var c1 = (Currency)50.35; //50.34 转换精度问题导致变样
+  var c2 = (Currency)(-50.50);
+  //c2.dollars: -50=>0xFFFFFFCE=>4294967246
+  //c2.cents: ((-50-4294967246)*100)&0xffff => (-429496729600)&0xffff => 0xFFFFFF9C00000000&0xffff => 0x0000 => 0
+  //超范围未抛异常
+  ```
+  以上两个问题纠正如下
+  ```cs
+  public static explict operator Currency (float value) {
+    cheched { //修正"超范围无异常"问题
+      uint dollars = (uint)value;
+      ushort cents = Convert.ToUInt16((value-dollars)*100); //修正"转换精度"及"超范围无异常"问题
+      return new Currency(dollars, cents);
+    }
+  }
+  1. 类之间的类型强制转换
+    * 基类子类间不能定义类型强制转换(编译器已经提供)
+    * 类型强制转换必须在源数据类型或目标数据类型的内部定义
+    对于C->B->A, D->B->A，唯一合法的自定义类型强制转换是兄弟C、D之间的转换，且只能在C或D的内部定义(为防止第三方把类型强制转换引入类中)
+  2. 基类和派生类之间的类型强制转换
+    编译器已经提供了基类和派生类之间的强制转换(是基于引用的转换)。
+    ```cs
+    MyBase derived = new MyDerived();
+    MyBase base = new MyBase();
+    MyDerived derived1 = (MyDerived) derived; //OK
+    MyDerived derived2 = (MyDerived) base; //Throws exception
+    ```
+    要将基类强制转换为派生类，可定义一个派生类的构造函数，以基类实例为参数
+    ```cs
+    class DerivedClass: BaseClass {
+      public DevivedClass(BaseClass base) { ... }
+    }
+    ```
+    3. 装箱和拆箱类型强制转换
+      装箱是一种隐式的强制转换，拆箱是一种显式的强制转换。  
+      装箱和拆箱都是把数据复制到新装箱或拆箱的对象上，不会影响原始值类型的内容。  
+* 多重类型强制转换
+  若在数据类型转换时没有可用的直接转换方式，C#编译器就会寻找一种间接组合的转换。
+
 [上一章][chapter-07] | [目录][readme] | [下一章][chapter-09]
 
   [readme]: readme.md
